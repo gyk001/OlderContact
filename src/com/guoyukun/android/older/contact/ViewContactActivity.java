@@ -10,6 +10,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.TextView;
 
 public class ViewContactActivity extends Activity {
 	private static final String TAG = "ViewContactActivity";
@@ -19,6 +24,11 @@ public class ViewContactActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
+		setContentView(R.layout.skeleton_activity);
+		LinearLayout ll = (LinearLayout)findViewById(R.id.contactInfoLinearLayout);
+		ll.setOrientation(LinearLayout.VERTICAL);
+		//ListView lv = (ListView) findViewById(R.id.infoList);
+		
 		final Intent intent = getIntent();
 		Uri data = intent.getData();
 
@@ -49,11 +59,20 @@ public class ViewContactActivity extends Activity {
 	            //Get the readable string
 	            String numberType = (String) ContactsContract.CommonDataKinds.Phone.getTypeLabel(getResources(), type, label);
 
+	            
+	            LayoutInflater flater = LayoutInflater.from(this); 
+	            View view = flater.inflate(R.layout.phone_item, null);
+	            TextView textView = (TextView)view.findViewById(R.id.phoneNum);
+	            textView.setText(phoneNumber);
 
+	            
+	            ll.addView(view);
 			sb.append( numberType);
 		}
 		sb.append("\r\n");
 		phones.close();
+       // this.addContentView(ll,new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,LinearLayout.LayoutParams.WRAP_CONTENT));
+
 		//-------------------------------------------------
 		// 查找email地址，这里email也可以有多个 
 		 
@@ -110,5 +129,7 @@ public class ViewContactActivity extends Activity {
 		Log.v(TAG, sb.toString());
 
 	}
+	
+	
 
 }
