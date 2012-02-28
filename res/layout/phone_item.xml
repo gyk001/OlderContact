@@ -24,16 +24,25 @@
         android:layout_height="wrap_content"
         android:layout_gravity="left"
         android:background="@drawable/ic_calllog_call" />
-
-    <TextView
-        android:id="@+id/phoneNum"
+	<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="xx"
-        android:textStyle="bold"
-        android:textSize="32dip" />
-
+	    android:orientation="vertical" >
+	    <TextView
+	        android:id="@+id/phoneNum"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:text="13681425312"
+	        android:textStyle="bold"
+	        android:textSize="32dip" />
+	    <TextView
+	        android:id="@+id/phoneType"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:text="公司电话"
+	        android:textStyle="bold"/>
+    </LinearLayout>
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

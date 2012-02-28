@@ -9,11 +9,13 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.telephony.PhoneNumberUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
 
 public class ViewContactActivity extends Activity {
@@ -31,46 +33,15 @@ public class ViewContactActivity extends Activity {
 		
 		final Intent intent = getIntent();
 		Uri data = intent.getData();
-
+		
 		final long rawContactId = ContentUris.parseId(data);
-
+		//联系人基本信息，姓名，备注
+		contactBaseInfo(rawContactId);
+		//生成电话号码控件
+		genPhoneNumberView( ll, rawContactId);
+		
 		StringBuffer sb = new StringBuffer();
-		// 如果有电话，根据联系人的ID查找到联系人的电话，电话可以是多个
-
-		Cursor phones = getContentResolver().query(
-				ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-				null,
-				ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = "
-						+ rawContactId, null, null);
-		while (phones.moveToNext()) {
-			String phoneNumber = phones
-					.getString(phones
-							.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-			
-			sb.append(phoneNumber + " ");
-			
-		     int type = phones.getInt( phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE));
-	           
-	            String label = null;
-	            //Custom type? Then get the custom label
-	            if (type == ContactsContract.CommonDataKinds.Phone.TYPE_CUSTOM) {
-	                label = phones.getString( phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.LABEL));
-	            }
-	            //Get the readable string
-	            String numberType = (String) ContactsContract.CommonDataKinds.Phone.getTypeLabel(getResources(), type, label);
-
-	            
-	            LayoutInflater flater = LayoutInflater.from(this); 
-	            View view = flater.inflate(R.layout.phone_item, null);
-	            TextView textView = (TextView)view.findViewById(R.id.phoneNum);
-	            textView.setText(phoneNumber);
-
-	            
-	            ll.addView(view);
-			sb.append( numberType);
-		}
-		sb.append("\r\n");
-		phones.close();
+		
        // this.addContentView(ll,new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,LinearLayout.LayoutParams.WRAP_CONTENT));
 
 		//-------------------------------------------------
@@ -130,6 +101,79 @@ public class ViewContactActivity extends Activity {
 
 	}
 	
+	private void contactBaseInfo( long contactId){
+		 Cursor contactCur = getContentResolver() 
+	                .query(ContactsContract.Contacts.CONTENT_URI, 
+	                        new String[]{ContactsContract.Contacts.DISPLAY_NAME}, 
+	                        ContactsContract.Contacts._ID + " = " + contactId, null, null); 
+		 if(contactCur.moveToNext()){
+			 String displayName = contactCur.getString(contactCur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+			 TextView view = (TextView)findViewById(R.id.contactDisplayName);
+			 view.setText(displayName);
+		 }
+		
+		
+        final String noteWhere = ContactsContract.Data.CONTACT_ID + " = ? AND " + ContactsContract.Data.MIMETYPE + " = ?"; 
+        final String[] noteWhereParams = new String[]{String.valueOf(contactId), 
+        			ContactsContract.CommonDataKinds.Note.CONTENT_ITEM_TYPE}; 
+        Cursor noteCur = getContentResolver().query(ContactsContract.Data.CONTENT_URI, 
+        			new String[]{ContactsContract.CommonDataKinds.Note.NOTE}, noteWhere, noteWhereParams, null); 
+	 	if (noteCur.moveToFirst()) { 
+	 	    String note = noteCur.getString(noteCur.getColumnIndex(ContactsContract.CommonDataKinds.Note.NOTE));
+	 	    TextView view = (TextView)findViewById(R.id.contactsRemark);
+	 	    view.setText(note);
+	 	}
+	 	noteCur.close();
+	}
 	
+	private void genPhoneNumberView(ViewGroup parent,long contactId){
+		// 如果有电话，根据联系人的ID查找到联系人的电话，电话可以是多个
+
+				Cursor phones = getContentResolver().query(
+						ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+						null,
+						ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = "
+								+ contactId, null, null);
+				while (phones.moveToNext()) {
+					String phoneNumber = phones
+							.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+					//去除分割符，否则可能出现 1-234-123-1412 这g样的号码格式
+					phoneNumber = PhoneNumberUtils.stripSeparators(phoneNumber);
+					//Log.v(TAG, PhoneNumberUtils.stripSeparators(phoneNumber));
+					
+				     int type = phones.getInt( phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE));
+			           
+			            String label = null;
+			            //Custom type? Then get the custom label
+			            if (type == ContactsContract.CommonDataKinds.Phone.TYPE_CUSTOM) {
+			                label = phones.getString( phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.LABEL));
+			            }
+			            //Get the readable string
+			            String numberType = (String) ContactsContract.CommonDataKinds.Phone.getTypeLabel(getResources(), type, label);
+			            
+			            
+			            LayoutInflater flater = LayoutInflater.from(this); 
+			            View view = flater.inflate(R.layout.phone_item, null);
+			            TextView pnView = (TextView)view.findViewById(R.id.phoneNum);
+			            
+			            pnView.setText(phoneNumber);
+			          
+			            pnView.setOnClickListener(new OnClickListener() {
+							
+							@Override
+							public void onClick(View v) {
+								Intent intent= new Intent(Intent.ACTION_CALL,Uri.parse("tel:"+((TextView)v).getText()));
+								startActivity(intent);
+							}
+						});
+			            
+			            TextView ptView = (TextView)view.findViewById(R.id.phoneType);
+			            ptView.setText(numberType);
+			            
+			            parent.addView(view);
+					
+				}
+				phones.close();
+	}
 
 }

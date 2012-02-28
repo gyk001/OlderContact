@@ -54,7 +54,7 @@ public class ContactListActivity extends FloatTextListActivity {
 
         // Get a cursor with all people
         Cursor c = getContentResolver().query(Contacts.CONTENT_URI,
-                CONTACT_PROJECTION, null, null, null);
+                CONTACT_PROJECTION, null, null, Contacts.DISPLAY_NAME);
 
         startManagingCursor(c);
 
@@ -95,7 +95,7 @@ public class ContactListActivity extends FloatTextListActivity {
             Log.v(TAG,uri.toString());
             final Intent intent = new Intent(Intent.ACTION_VIEW, uri);
             startActivity(intent);
-            finish();
+          //  finish();
             /*
             int type = c.getInt( COL_ID );
             String phone = c.getString(1);
